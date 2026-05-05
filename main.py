@@ -47,3 +47,114 @@ while True:
         break
     else:
         print("Invalid choice.")
+
+def add_student():
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS students (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            age INTEGER,
+            email TEXT
+        )
+    """)
+
+    name = input("Enter name: ")
+    age = input("Enter age: ")
+    email = input("Enter email: ")
+
+    if not age.isdigit():
+        print("Invalid age.")
+        conn.close()
+        return
+
+    if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+        print("Invalid email.")
+        conn.close()
+        return
+
+    cursor.execute("INSERT INTO students (name, age, email) VALUES (?, ?, ?)",
+                   (name, int(age), email))
+
+    conn.commit()
+    conn.close()
+    print("Student added.")
+
+
+def view_students():
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM students")
+    rows = cursor.fetchall()
+
+    if len(rows) == 0:
+        print("No students found.")
+    else:
+        for row in rows:
+            print(row)
+
+    conn.close()
+
+def update_student():
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    student_id = input("Enter ID to update: ")
+
+    if not student_id.isdigit():
+        print("Invalid ID.")
+        conn.close()
+        return
+
+    name = input("Enter new name: ")
+    age = input("Enter new age: ")
+    email = input("Enter new email: ")
+
+    if not age.isdigit():
+        print("Invalid age.")
+        conn.close()
+        return
+
+    if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+        print("Invalid email.")
+        conn.close()
+        return
+
+    cursor.execute("""
+        UPDATE students
+        SET name = ?, age = ?, email = ?
+        WHERE id = ?
+    """, (name, int(age), email, int(student_id)))
+
+    if cursor.rowcount == 0:
+        print("Student not found.")
+    else:
+        print("Student updated.")
+
+    conn.commit()
+    conn.close()
+
+
+def delete_student():
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    student_id = input("Enter ID to delete: ")
+
+    if not student_id.isdigit():
+        print("Invalid ID.")
+        conn.close()
+        return
+
+    cursor.execute("DELETE FROM students WHERE id = ?", (int(student_id),))
+
+    if cursor.rowcount == 0:
+        print("Student not found.")
+    else:
+        print("Student deleted.")
+
+    conn.commit()
+    conn.close()
